@@ -22,7 +22,7 @@ pipeline {
             steps {
                 sh 'zip -r artifact.zip *'
                 withAWS(region: AWS_REGION, credentials: 'aws-credentials') {
-                    s3Upload(file: 'artifact.zip', bucket: S3_BUCKET, path: 'artifacts/artifact.zip')
+                     s3Upload(entries: [[file: 'artifact.zip', bucket: S3_BUCKET, path: 'artifacts/artifact.zip']])
                 }
             }
         }
