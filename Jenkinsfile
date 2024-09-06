@@ -22,7 +22,7 @@ pipeline {
                 sh 'zip -r artifact.zip *'
                 withAWS(region: AWS_REGION, credentials: 'aws-credentials') {
                      s3Upload(
-                         files: [[file: 'artifact.zip', bucket: S3_BUCKET, path: 'artifacts/artifact.zip']],
+                         entries: [[file: 'artifact.zip', bucket: S3_BUCKET, path: 'artifacts/artifact.zip']],
                          profileName: 'default',
                          userMetadata: [version: '1.0', environment: 'dev'],
                          dontWaitForConcurrentBuildCompletion: false,
