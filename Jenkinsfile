@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
     environment {
@@ -10,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.dev/bhimarajuneelagiri/Web-app'
+                git 'https://github.com/bhimarajuneelagiri/Web-app'
             }
         }
         stage('Build') {
@@ -22,7 +21,15 @@ pipeline {
             steps {
                 sh 'zip -r artifact.zip *'
                 withAWS(region: AWS_REGION, credentials: 'aws-credentials') {
-                     s3Upload(entries: [[file: 'artifact.zip', bucket: S3_BUCKET, path: 'artifacts/artifact.zip']])
+                     s3Upload(
+                         files: [[file: 'artifact.zip', bucket: S3_BUCKET, path: 'artifacts/artifact.zip']],
+                         profileName: 'default',
+                         userMetadata: [version: '1.0', environment: 'dev'],
+                         dontWaitForConcurrentBuildCompletion: false,
+                         consoleLogLevel: 'INFO',
+                         pluginFailureResultConstraint: 'FAILURE',
+                         dontSetBuildResultOnFailure: false
+                     )
                 }
             }
         }
@@ -39,4 +46,3 @@ pipeline {
         }
     }
 }
-
