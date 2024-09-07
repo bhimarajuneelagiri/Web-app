@@ -29,11 +29,11 @@ pipeline {
         stage('Package Application') {
             steps {
                 script {
-                    
-                    sh '''
-                    zip -r web-app.zip . -x Jenkinsfile
-                    aws s3 cp web-app.zip s3://$S3_BUCKET/
-                    '''
+                   withAWS(credentials: "$AWS_CREDENTIALS_ID", region: "$AWS_REGION") {
+                        sh '''
+                        aws s3 cp web-app.zip s3://$S3_BUCKET/
+                        '''
+                    }
                 }
             }
         }
