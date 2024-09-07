@@ -26,17 +26,6 @@ pipeline {
             }
         }
 
-        stage('Install zip if not available') {
-            steps {
-                sh '''
-                if ! command -v zip &> /dev/null
-                then
-                    sudo apt-get update && sudo apt-get install -y zip
-                fi
-                '''
-            }
-        }
-        
         stage('Package Application') {
             steps {
                 script {
