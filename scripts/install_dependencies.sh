@@ -1,3 +1,3 @@
 #!/bin/bash
-cd /home/ubuntu/my-web-app
+cd /home/ubuntu/Web-app/src
 npm install

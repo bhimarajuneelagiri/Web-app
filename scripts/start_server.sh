@@ -1,3 +1,4 @@
 #!/bin/bash
-cd /home/ubuntu/my-web-app
-npm start &
+cd /home/ubuntu/Web-app/src
+nohup npm start > server.out 2>&1 &
+

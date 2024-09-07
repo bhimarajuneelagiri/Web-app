@@ -1,48 +1,67 @@
 pipeline {
     agent any
+
     environment {
-        S3_BUCKET = 'webapp-newbucket'
-        APP_NAME = 'webapp'
-        DEPLOYMENT_GROUP = 'webappdeployment'
-        AWS_REGION = 'us-east-1'
+        AWS_REGION = 'us-east-1'    
+        S3_BUCKET = 'webapp-newbucket'      
+        CODEDEPLOY_APP = 'webapp'  
+        CODEDEPLOY_GROUP = 'webappdeployment'  
+        AWS_CREDENTIALS_ID = 'aws-credentials-id' 
     }
+
     stages {
-        stage('Clone Repository') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/bhimarajuneelagiri/Web-app'
+			
+                git branch: 'main', url: 'https://github.com/bhimarajuneelagiri/Web-app'
             }
         }
-        stage('Build') {
+
+        stage('Install Dependencies') {
             steps {
-                sh 'echo "Building Application..."'
-            }
-        }
-        stage('Package and Upload to S3') {
-            steps {
-                sh 'zip -r artifact.zip *'
-                withAWS(region: AWS_REGION, credentials: 'aws-credentials') {
-                     s3Upload(
-                         entries: [[file: 'artifact.zip', bucket: S3_BUCKET, path: 'artifacts/artifact.zip']],
-                         profileName: 'default',
-                         userMetadata: [version: '1.0', environment: 'dev'],
-                         dontWaitForConcurrentBuildCompletion: false,
-                         consoleLogLevel: 'INFO',
-                         pluginFailureResultConstraint: 'FAILURE',
-                         dontSetBuildResultOnFailure: false
-                     )
+                dir('src') {
+                   
+                    sh 'npm install'
                 }
             }
         }
-        stage('Deploy to EC2') {
+
+        stage('Package Application') {
             steps {
-                codedeploy(
-                    application: APP_NAME,
-                    deploymentGroup: DEPLOYMENT_GROUP,
-                    region: AWS_REGION,
-                    s3Bucket: S3_BUCKET,
-                    s3Key: 'artifacts/artifact.zip'
-                )
+                script {
+                    
+                    sh '''
+                    zip -r web-app.zip . -x Jenkinsfile
+                    aws s3 cp web-app.zip s3://$S3_BUCKET/
+                    '''
+                }
             }
+        }
+
+        stage('Deploy to AWS CodeDeploy') {
+            steps {
+                script {
+                    withAWS(credentials: "$AWS_CREDENTIALS_ID", region: "$AWS_REGION") {
+                        
+                        sh """
+                        aws deploy create-deployment \
+                            --application-name $CODEDEPLOY_APP \
+                            --deployment-group-name $CODEDEPLOY_GROUP \
+                            --s3-location bucket=$S3_BUCKET,key=web-app.zip,bundleType=zip \
+                            --region $AWS_REGION
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment to AWS CodeDeploy was successful!'
+        }
+        failure {
+            echo 'Deployment failed. Please check the logs.'
         }
     }
 }
