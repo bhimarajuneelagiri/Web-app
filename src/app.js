@@ -6,6 +6,6 @@ const server = http.createServer((req, res) => {
   res.end('Hello, World! Deployed via CI/CD pipeline\n');
 });
 
-server.listen(80, () => {
-  console.log('Server running on port 80');
+server.listen(3000, () => {
+  console.log('Server running on port 3000');
 });
